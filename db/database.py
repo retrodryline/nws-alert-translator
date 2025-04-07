@@ -4,8 +4,8 @@ import json
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "alerts.db")
 
-def init_db():
-    conn = sqlite3.connect(DB_PATH)
+def init_db(db_path):
+    conn = sqlite3.connect(db_path)
     with open(os.path.join(os.path.dirname(__file__), "schema.sql")) as f:
         conn.executescript(f.read())
     conn.commit()
