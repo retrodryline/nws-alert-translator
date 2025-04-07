@@ -8,6 +8,8 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from db.database import init_db, insert_alert, alert_is_unchanged
 from app.metrics import TRANSLATION_COUNT
+from datetime import datetime
+print(f"\n⏱️ Polling run at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", flush=True)
 
 NWS_API_URL = "https://api.weather.gov/alerts/active"
 NWS_CAP_FEED_URL = "https://alerts.weather.gov/cap/us.php?x=1"
@@ -82,8 +84,8 @@ def fetch_nws_api_alerts(db_path):
             insert_alert(alert_data, DB_PATH)
             inserted += 1
 
-        print(f"✅ Inserted {inserted} new alert(s) from API")
-        print(f"💬 Translations this cycle: {TRANSLATION_COUNT}")
+        print(f"✅ Inserted {inserted} new alert(s) from API", flush=True)
+        print(f"💬 Translations this cycle: {TRANSLATION_COUNT}", flush=True)
         TRANSLATION_COUNT = 0  # reset counter after the cycle finishes     
 
     except Exception as e:
