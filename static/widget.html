@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Translated Weather Alerts</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 1em;
+    }
+    .alert {
+      border: 1px solid #ccc;
+      padding: 1em;
+      margin-bottom: 1em;
+      border-radius: 8px;
+    }
+    .alert h3 {
+      margin: 0 0 0.3em 0;
+    }
+    .translated {
+      color: green;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌩️ Latest Weather Alerts</h1>
+  <div id="alerts"></div>
+
+  <script>
+    async function loadAlerts() {
+      const res = await fetch('/alerts/latest');
+      const data = await res.json();
+      console.log("🛰️ Got alerts:", data);
+
+      const container = document.getElementById('alerts');
+      container.innerHTML = '';
+
+      data.forEach(alert => {
+        const div = document.createElement('div');
+        div.className = 'alert';
+        div.innerHTML = `
+          <h3>${alert.headline}</h3>
+          <div class="translated"><strong>ES:</strong> ${alert.translated_headline}</div>
+          <p><strong>Details:</strong> ${alert.description || ""}</p>
+          <p class="translated"><strong>Detalles (ES):</strong> ${alert.translated_description || ""}</p>
+          <div><strong>Area:</strong> ${alert.area}</div>
+          <div><strong>Severity:</strong> ${alert.severity}</div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    loadAlerts();
+    setInterval(loadAlerts, 30000); // every 30s
+  </script>
+</body>
+</html>

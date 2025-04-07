@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+.env
+*.sqlite3
+db/alerts.db
+logs/
+
+# OS files
+.DS_Store
+
+# VS Code / Codespaces
+.vscode/
+*.code-workspace
