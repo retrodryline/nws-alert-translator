@@ -1,58 +1,123 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Translated Weather Alerts</title>
+  <meta charset="utf-8">
+  <title>Live National Weather Service Alerts (*This is Experimental at the moment*)</title>
   <style>
     body {
-      font-family: sans-serif;
-      padding: 1em;
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 1rem;
+      background: #f9f9f9;
+      color: #222;
+    }
+    h1 {
+      margin-bottom: 1rem;
+    }
+    input, select {
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      width: 100%;
+      max-width: 500px;
+      display: block;
     }
     .alert {
-      border: 1px solid #ccc;
-      padding: 1em;
-      margin-bottom: 1em;
+      background: white;
+      border-left: 5px solid #777;
+      margin-bottom: 1rem;
+      padding: 1rem;
       border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
-    .alert h3 {
-      margin: 0 0 0.3em 0;
+    .alert.extreme { border-color: #d00000; }
+    .alert.severe { border-color: #f48c06; }
+    .alert.moderate { border-color: #fcbf49; }
+    .alert.minor { border-color: #80ed99; }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.8rem;
+      border-radius: 999px;
+      background: #eee;
+      color: #333;
+      margin-bottom: 0.5rem;
     }
-    .translated {
-      color: green;
-      font-style: italic;
+    .area {
+      font-size: 0.9rem;
+      color: #555;
+      margin-top: 0.3rem;
     }
   </style>
 </head>
 <body>
-  <h1>🌩️ Latest Weather Alerts</h1>
+
+  <h1>🌩️ Live Translated Weather Alerts</h1>
+
+  <input type="text" id="search" placeholder="Search keyword, area, type...">
+  <select id="severityFilter">
+    <option value="">Filter by severity</option>
+    <option value="Extreme">Extreme</option>
+    <option value="Severe">Severe</option>
+    <option value="Moderate">Moderate</option>
+    <option value="Minor">Minor</option>
+  </select>
+
   <div id="alerts"></div>
 
   <script>
-    async function loadAlerts() {
-      const res = await fetch('/alerts/latest');
-      const data = await res.json();
-      console.log("🛰️ Got alerts:", data);
+    let alerts = [];
 
-      const container = document.getElementById('alerts');
-      container.innerHTML = '';
+    // Fetch alerts
+    fetch('/alerts')
+      .then(res => res.json())
+      .then(data => {
+        alerts = data;
+        renderAlerts(alerts);
+      });
 
-      data.forEach(alert => {
-        const div = document.createElement('div');
-        div.className = 'alert';
+    // Filters
+    document.getElementById("search").addEventListener("input", () => filterAlerts());
+    document.getElementById("severityFilter").addEventListener("change", () => filterAlerts());
+
+    function filterAlerts() {
+      const query = document.getElementById("search").value.toLowerCase();
+      const severity = document.getElementById("severityFilter").value;
+
+      const filtered = alerts.filter(a => {
+        const matchesQuery =
+          (a.translated_headline || "").toLowerCase().includes(query) ||
+          (a.translated_description || "").toLowerCase().includes(query) ||
+          (a.area || "").toLowerCase().includes(query);
+        const matchesSeverity = !severity || a.severity === severity;
+        return matchesQuery && matchesSeverity;
+      });
+
+      renderAlerts(filtered);
+    }
+
+    function renderAlerts(data) {
+      const container = document.getElementById("alerts");
+      container.innerHTML = "";
+
+      if (data.length === 0) {
+        container.innerHTML = "<p>No matching alerts found.</p>";
+        return;
+      }
+
+      data.forEach(a => {
+        const div = document.createElement("div");
+        const severityClass = (a.severity || "").toLowerCase();
+        div.className = `alert ${severityClass}`;
         div.innerHTML = `
-          <h3>${alert.headline}</h3>
-          <div class="translated"><strong>ES:</strong> ${alert.translated_headline}</div>
-          <p><strong>Details:</strong> ${alert.description || ""}</p>
-          <p class="translated"><strong>Detalles (ES):</strong> ${alert.translated_description || ""}</p>
-          <div><strong>Area:</strong> ${alert.area}</div>
-          <div><strong>Severity:</strong> ${alert.severity}</div>
+          <div class="badge">${a.severity || "Unknown"}</div>
+          <div><strong>${a.translated_headline || "⚠️ Sin título"}</strong></div>
+          <div class="area">🌍 ${a.area || "Unknown Area"}</div>
+          <div style="margin-top: 0.5rem;">${a.translated_description || "Sin descripción."}</div>
         `;
         container.appendChild(div);
       });
     }
-
-    loadAlerts();
-    setInterval(loadAlerts, 30000); // every 30s
   </script>
 </body>
 </html>
