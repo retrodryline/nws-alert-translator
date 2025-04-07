@@ -9,5 +9,6 @@ CREATE TABLE IF NOT EXISTS alerts (
     raw_json TEXT,
     translated_headline TEXT,
     translated_description TEXT,
+    translated_instruction TEXT,
     translated_json TEXT
 );

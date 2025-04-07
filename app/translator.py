@@ -1,20 +1,58 @@
 import os
 import requests
 import openai
+import json
 from openai import OpenAI
 from app.metrics import TRANSLATION_COUNT
 from dotenv import load_dotenv
 load_dotenv()  # 👈 This loads .env into os.environ
 
 TRANSLATOR = os.getenv("TRANSLATOR", "gpt")  # default to gpt if not set
-
 openai.api_key = os.getenv("OPENAI_API_KEY")
 openai_client = OpenAI(api_key=openai.api_key)
 LIBRE_URL = os.getenv("LIBRE_URL", "https://translate.argosopentech.com")
 
 
-# Toggle between libre and gpt
-TRANSLATOR = os.getenv("TRANSLATOR", "libre")  # options: 'libre', 'gpt'
+def translate_all_fields(headline, description, instruction) -> dict:
+    global TRANSLATION_COUNT
+    if not (headline or description or instruction):
+        return {"translated_headline": "", "translated_description": "", "translated_instruction": ""}
+
+    TRANSLATION_COUNT += 1
+
+    prompt = f"""
+Translate the following weather alert into Spanish. Return ONLY valid JSON like:
+{{
+  "translated_headline": "...",
+  "translated_description": "...",
+  "translated_instruction": "..."
+}}
+
+Headline: {headline or ""}
+Description: {description or ""}
+Instruction: {instruction or ""}
+"""
+
+    try:
+        response = openai_client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3,
+            max_tokens=600
+        )
+        message = response.choices[0].message.content
+        return json.loads(message)
+    except Exception as e:
+        print(f"❌ GPT translation failed: {e}")
+        return {
+            "translated_headline": "",
+            "translated_description": "",
+            "translated_instruction": ""
+        }
+
+
 
 def translate_with_libre(text, target_lang="es"):
     try:

@@ -1,7 +1,7 @@
 import requests
 import feedparser
 from datetime import datetime
-from app.translator import translate_to_spanish
+from app.translator import translate_to_spanish, translate_all_fields
 import json
 import sys
 import os
@@ -37,6 +37,8 @@ def fetch_nws_api_alerts(db_path):
             props = alert.get("properties", {})
             headline = (props.get("headline") or "").strip()
             description = (props.get("description") or "").strip()
+            instruction = (props.get("instruction") or "").strip()
+
 
             if "test" in headline.lower() or "test" in description.lower():
                 print(f"🚫 Skipping test alert: {props.get('id', '')}")
@@ -54,8 +56,11 @@ def fetch_nws_api_alerts(db_path):
                 print(f"⏩ Unchanged alert: {props['id']}")
                 continue
 
-            translated_headline = translate_to_spanish(headline)
-            translated_description = translate_to_spanish(description)
+            translations = translate_all_fields(headline, description, instruction)
+            translated_headline = translations.get("translated_headline", "")
+            translated_description = translations.get("translated_description", "")
+            translated_instruction = translations.get("translated_instruction", "")
+
 
             alert_data = {
                 "id": props.get("id", ""),
@@ -68,6 +73,7 @@ def fetch_nws_api_alerts(db_path):
                 "raw_json": json.dumps(props),
                 "translated_headline": translated_headline,
                 "translated_description": translated_description,
+                "translated_instruction": translated_instruction,
                 "translated_json": ""                
             }
             print(f"[API] {alert_data['id']}: {alert_data['headline']} - {alert_data['area']}")

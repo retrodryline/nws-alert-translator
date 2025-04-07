@@ -7,12 +7,20 @@ def init_db(db_path):
     try:
         schema_path = os.path.join(os.path.dirname(__file__), "schema.sql")
         with open(schema_path) as f:
-            conn.executescript(f.read())
-        print(f"✅ Initialized DB from: {schema_path}")
+            schema = f.read()
+
+        # 👇 Drop the alerts table first if it exists (dev use only)
+        conn.execute("DROP TABLE IF EXISTS alerts")
+
+        # 👇 Now apply full schema
+        conn.executescript(schema)
+
+        print(f"✅ Recreated alerts table from: {schema_path}")
     except Exception as e:
         print(f"❌ Failed to initialize DB: {e}")
     conn.commit()
     conn.close()
+
 
 def insert_alert(alert, db_path):
     conn = sqlite3.connect(db_path, check_same_thread=False)
@@ -21,8 +29,8 @@ def insert_alert(alert, db_path):
         cur.execute("""
             INSERT OR REPLACE INTO alerts
             (id, source, headline, area, severity, effective, expires, raw_json,
-            translated_headline, translated_description, translated_json)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            translated_headline, translated_description, translated_instruction, translated_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             alert["id"],
             alert["source"],
@@ -34,6 +42,7 @@ def insert_alert(alert, db_path):
             alert["raw_json"],
             alert.get("translated_headline", ""),
             alert.get("translated_description", ""),
+            alert.get("translated_instruction", ""),
             alert.get("translated_json", "")
         ))
         conn.commit()
