@@ -81,7 +81,7 @@ def poll_nws_every(interval=30):  # every 30 sec
             print("🔁 Polling NWS alerts...")
             try:
                 fetch_nws_api_alerts()
-                fetch_nws_cap_alerts()
+                #fetch_nws_cap_alerts()
             except Exception as e:
                 print(f"❌ Polling error: {e}")
             time.sleep(interval)
