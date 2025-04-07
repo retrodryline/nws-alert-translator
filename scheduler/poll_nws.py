@@ -16,9 +16,11 @@ if os.getenv("RENDER"):
 else:
     DB_PATH = os.path.join(os.path.dirname(__file__), "../db/alerts.db")
 
-
+TRANSLATION_COUNT = 0  # global at top of file
 def fetch_nws_api_alerts(db_path):
+    global TRANSLATION_COUNT
     print("\n--- Fetching from NWS API ---")
+    inserted=0
     try:
         headers = {"User-Agent": "WeatherAlertTranslator/1.0 (your@email.com)"}
         response = requests.get(NWS_API_URL, headers=headers, timeout=10)
@@ -72,7 +74,12 @@ def fetch_nws_api_alerts(db_path):
             print(f"🔍 Found {len(alerts)} alerts from API")
             print(f"[🌍] Translated: {translated_headline}")
             insert_alert(alert_data, DB_PATH)
+            inserted += 1
 
+        print(f"✅ Inserted {inserted} new alert(s) from API")
+        print(f"💬 Translations this cycle: {TRANSLATION_COUNT}")
+        TRANSLATION_COUNT = 0  # reset counter after the cycle finishes     
+          
     except Exception as e:
         print(f"Error fetching NWS API alerts: {e}")
 
