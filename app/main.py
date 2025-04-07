@@ -9,7 +9,7 @@ from feedgen.feed import FeedGenerator
 from db.database import init_db, fetch_alerts, insert_alert
 import threading
 import time
-from scheduler.poll_nws import fetch_nws_api_alerts, fetch_nws_cap_alerts
+from scheduler.poll_nws import fetch_nws_api_alerts #, fetch_nws_cap_alerts
 
 # 📦 Handle SQLite path
 if os.getenv("RENDER"):
