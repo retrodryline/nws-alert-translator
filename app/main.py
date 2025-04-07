@@ -42,33 +42,49 @@ def get_all_alerts():
 def get_latest_alerts():
     return fetch_alerts(DB_PATH, limit=5)
 
-@app.get("/alerts/{alert_id}")
-def get_alert_by_id(alert_id: str):
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM alerts WHERE id = ?", (alert_id,))
-    row = cur.fetchone()
-    conn.close()
-    return dict(row) if row else {"error": "Alert not found"}
-
 @app.get("/rss", response_class=Response)
 def rss_feed():
     fg = FeedGenerator()
-    fg.title("Translated Weather Alerts")
-    fg.link(href="https://nws-alert-translator.onrender.com/rss", rel="alternate")
-    fg.description("Live weather alerts translated to Spanish")
+    fg.title("Translated Weather Alerts - Español")
+    fg.link(href="https://nws-alert-translator.onrender.com/rss", rel="self")
+    fg.description("Live weather alerts translated to Spanish with severity, timing, and safety instructions.")
 
-    alerts = fetch_alerts(DB_PATH, limit=15)
+    alerts = fetch_alerts(DB_PATH, limit=100)
+
     for a in alerts:
+        props = json.loads(a["raw_json"]) if a["raw_json"] else {}
+        event = props.get("event", "Unknown Event")
+        effective = props.get("effective", "Unknown Time")
+        expires = props.get("expires", "Unknown Time")
+        urgency = props.get("urgency", "N/A")
+        certainty = props.get("certainty", "N/A")
+        sender = props.get("senderName", "N/A")
+
+        title = f"⚠️ [{a['severity']}] {event} - {a['area']} (Until {expires})"
+
+        desc = f"""
+📍 **Area:** {a['area'] or 'Unknown'}
+📣 **Event:** {event}
+⏰ **Effective:** {effective}
+⌛ **Expires:** {expires}
+⚠️ **Severity:** {a['severity'] or 'N/A'}
+❗ **Urgency:** {urgency}
+📡 **Certainty:** {certainty}
+🗣️ **Sender:** {sender}
+🧭 **Instruction:** {a.get('translated_instruction') or 'Sin instrucciones.'}
+
+📝 **Descripción:** {a.get('translated_description') or 'Sin descripción.'}
+"""
+
         fe = fg.add_entry()
         fe.id(a["id"])
-        fe.title(a["translated_headline"])
-        fe.description(a.get("translated_description") or "")
+        fe.title(title)
+        fe.description(desc.strip())
         fe.link(href=f"https://nws-alert-translator.onrender.com/alerts/{a['id']}")
         fe.pubDate(a["effective"] or a["expires"])
 
     return Response(content=fg.rss_str(pretty=True), media_type="application/rss+xml")
+
 
 def poll_nws_every(interval=30):  # every 30 sec
     def loop():
