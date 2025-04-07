@@ -79,6 +79,7 @@ def poll_nws_every(interval=30):  # every 30 sec
     def loop():
         while True:
             print("🔁 Polling NWS alerts...")
+            time.sleep(2)
             try:
                 fetch_nws_api_alerts()
                 #fetch_nws_cap_alerts()

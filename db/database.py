@@ -6,8 +6,13 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "alerts.db")
 
 def init_db(db_path):
     conn = sqlite3.connect(db_path)
-    with open(os.path.join(os.path.dirname(__file__), "schema.sql")) as f:
-        conn.executescript(f.read())
+    try:
+        schema_path = os.path.join(os.path.dirname(__file__), "schema.sql")
+        with open(schema_path) as f:
+            conn.executescript(f.read())
+        print(f"✅ Initialized DB from: {schema_path}")
+    except Exception as e:
+        print(f"❌ Failed to initialize DB: {e}")
     conn.commit()
     conn.close()
 
