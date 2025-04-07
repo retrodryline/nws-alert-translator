@@ -92,3 +92,7 @@ def poll_nws_every(interval=30):  # every 30 sec
 def startup_event():
     init_db(DB_PATH)
     poll_nws_every(30)  # Start polling every 30 sec
+
+@app.get("/ping")
+def ping():
+    return {"status": "alive"}
