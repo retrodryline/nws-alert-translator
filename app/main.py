@@ -10,6 +10,8 @@ from db.database import init_db, fetch_alerts, insert_alert
 import threading
 import time
 from scheduler.poll_nws import fetch_nws_api_alerts #, fetch_nws_cap_alerts
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 # 📦 Handle SQLite path
 if os.getenv("RENDER"):
@@ -30,9 +32,11 @@ app.add_middleware(
 # Serve static widget
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-@app.get("/")
-def root():
-    return {"message": "🌩️ NWS Alert Translator is alive"}
+
+@app.get("/", response_class=HTMLResponse)
+def home():
+    with open("static/widget.html", "r") as f:
+        return HTMLResponse(f.read())
 
 @app.get("/alerts")
 def get_all_alerts():

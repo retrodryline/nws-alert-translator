@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Live National Weather Service Alerts (*This is Experimental at the moment*)</title>
+  <title>Translated National Weather Service Watch, Warnings, Advisories (Spanish-only right now)</title>
   <style>
     body {
       font-family: system-ui, sans-serif;
@@ -52,7 +52,12 @@
 </head>
 <body>
 
-  <h1>🌩️ Live Translated Weather Alerts</h1>
+  <header style="text-align: center; margin-bottom: 2rem;">
+    <h1>🌦️ Weatherlingo</h1>
+    <p style="font-size: 1.1rem; color: #333;">
+      Live bilingual weather alerts, powered by AI and the National Weather Service.
+    </p>
+  </header>
 
   <input type="text" id="search" placeholder="Search keyword, area, type...">
   <select id="severityFilter">
@@ -119,5 +124,20 @@
       });
     }
   </script>
+</body>
+</html>
+</script>
+
+<!-- ⬇️ Add disclaimer + support just before </body> -->
+<hr style="margin-top: 2rem;">
+
+<footer style="font-size: 0.85rem; color: #555; text-align: center;">
+  <p><strong>Disclaimer:</strong> Weatherlingo is an independent project and is not affiliated with any government or language-learning agency. Data is sourced from the U.S. National Weather Service. Translations are AI-generated and should be used alongside official English warnings.</p>
+
+  <p style="margin-top: 1rem;">
+    ☕️ Like this project? <a href="https://www.buymeacoffee.com/YOUR_USERNAME" target="_blank" style="text-decoration: none;">Buy me a coffee</a> or <a href="mailto:hello@weatherlingo.com">contact me</a>!
+  </p>
+</footer>
+
 </body>
 </html>
