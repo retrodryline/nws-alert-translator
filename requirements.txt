@@ -1,3 +1,6 @@
 requests
 feedparser
 feedgen
+fastapi
+uvicorn
+openai
