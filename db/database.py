@@ -2,10 +2,8 @@ import sqlite3
 import os
 import json
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "alerts.db")
-
 def init_db(db_path):
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect(db_path, check_same_thread=False)
     try:
         schema_path = os.path.join(os.path.dirname(__file__), "schema.sql")
         with open(schema_path) as f:
@@ -16,8 +14,8 @@ def init_db(db_path):
     conn.commit()
     conn.close()
 
-def insert_alert(alert):
-    conn = sqlite3.connect(DB_PATH)
+def insert_alert(alert, db_path):
+    conn = sqlite3.connect(db_path, check_same_thread=False)
     cur = conn.cursor()
     try:
         cur.execute("""
@@ -42,10 +40,10 @@ def insert_alert(alert):
     except Exception as e:
         print(f"DB insert error: {e}")
     finally:
-        conn.close() 
+        conn.close()
 
-def alert_is_unchanged(alert_id, headline, description):
-    conn = sqlite3.connect(DB_PATH)
+def alert_is_unchanged(alert_id, headline, description, db_path):
+    conn = sqlite3.connect(db_path, check_same_thread=False)
     cur = conn.cursor()
     cur.execute("""
         SELECT headline, raw_json FROM alerts WHERE id = ?
@@ -63,9 +61,8 @@ def alert_is_unchanged(alert_id, headline, description):
     return (headline.strip() == existing_headline.strip() and
             description.strip() == existing_description.strip())
 
-
 def fetch_alerts(db_path, limit=10):
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect(db_path, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
     cur.execute("SELECT * FROM alerts ORDER BY effective DESC LIMIT ?", (limit,))

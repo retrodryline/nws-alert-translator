@@ -30,11 +30,6 @@ app.add_middleware(
 # Serve static widget
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-@app.on_event("startup")
-def startup_event():
-    # Ensure DB + alerts table exist on startup
-    init_db(DB_PATH)
-
 @app.get("/")
 def root():
     return {"message": "🌩️ NWS Alert Translator is alive"}
@@ -49,7 +44,7 @@ def get_latest_alerts():
 
 @app.get("/alerts/{alert_id}")
 def get_alert_by_id(alert_id: str):
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
     cur.execute("SELECT * FROM alerts WHERE id = ?", (alert_id,))
@@ -81,7 +76,7 @@ def poll_nws_every(interval=30):  # every 30 sec
             print("🔁 Polling NWS alerts...")
             time.sleep(2)
             try:
-                fetch_nws_api_alerts()
+                fetch_nws_api_alerts(DB_PATH)
                 #fetch_nws_cap_alerts()
             except Exception as e:
                 print(f"❌ Polling error: {e}")
@@ -92,7 +87,9 @@ def poll_nws_every(interval=30):  # every 30 sec
 @app.on_event("startup")
 def startup_event():
     init_db(DB_PATH)
-    poll_nws_every(30)  # Start polling every 30 sec
+    # Start polling in a background thread
+    poll_nws_every(30)
+
 
 @app.get("/ping")
 def ping():

@@ -11,7 +11,13 @@ from db.database import init_db, insert_alert, alert_is_unchanged
 NWS_API_URL = "https://api.weather.gov/alerts/active"
 NWS_CAP_FEED_URL = "https://alerts.weather.gov/cap/us.php?x=1"
 
-def fetch_nws_api_alerts():
+if os.getenv("RENDER"):
+    DB_PATH = "/tmp/alerts.db"
+else:
+    DB_PATH = os.path.join(os.path.dirname(__file__), "../db/alerts.db")
+
+
+def fetch_nws_api_alerts(db_path):
     print("\n--- Fetching from NWS API ---")
     try:
         headers = {"User-Agent": "WeatherAlertTranslator/1.0 (your@email.com)"}
@@ -29,7 +35,7 @@ def fetch_nws_api_alerts():
             headline = props.get("headline", "")
             description = props.get("description", "")
 
-            if alert_is_unchanged(props["id"], headline, description):
+            if alert_is_unchanged(props["id"], headline, description, DB_PATH):
                 print(f"⏩ Unchanged alert: {props['id']}")
                 continue
 
@@ -52,7 +58,7 @@ def fetch_nws_api_alerts():
             print(f"[API] {alert_data['id']}: {alert_data['headline']} - {alert_data['area']}")
             print(f"🔍 Found {len(alerts)} alerts from API")
             print(f"[🌍] Translated: {translated_headline}")
-            insert_alert(alert_data)
+            insert_alert(alert_data, DB_PATH)
 
     except Exception as e:
         print(f"Error fetching NWS API alerts: {e}")
@@ -73,13 +79,13 @@ def fetch_nws_api_alerts():
 #                 "expires": entry.updated,
 #                 "raw_json": json.dumps(entry)
 #             }
-#             insert_alert(alert_data)
+#             insert_alert(alert_data, DB_PATH)
 #             print(f"[CAP] {entry.id}: {entry.title}")
 #     except Exception as e:
 #         print(f"Error fetching NWS CAP alerts: {e}")
 
 if __name__ == "__main__":
     print(f"\n🌩️ NWS Alert Poller - {datetime.now()}")
-    init_db()
-    fetch_nws_api_alerts()
+    init_db(DB_PATH)
+    fetch_nws_api_alerts(DB_PATH)
     # fetch_nws_cap_alerts()
