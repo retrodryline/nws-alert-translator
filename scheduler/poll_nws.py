@@ -7,6 +7,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from db.database import init_db, insert_alert, alert_is_unchanged
+from app.metrics import TRANSLATION_COUNT
 
 NWS_API_URL = "https://api.weather.gov/alerts/active"
 NWS_CAP_FEED_URL = "https://alerts.weather.gov/cap/us.php?x=1"
@@ -34,10 +35,9 @@ def fetch_nws_api_alerts(db_path):
 
         for alert in alerts:  
             props = alert.get("properties", {})
-            headline = props.get("headline", "")
-            description = props.get("description", "")
+            headline = (props.get("headline") or "").strip()
+            description = (props.get("description") or "").strip()
 
-            # ✅ Skip if headline and description are basically empty or test alerts
             if "test" in headline.lower() or "test" in description.lower():
                 print(f"🚫 Skipping test alert: {props.get('id', '')}")
                 continue
@@ -46,7 +46,7 @@ def fetch_nws_api_alerts(db_path):
                 print(f"⏸️ Skipping monitor-only alert: {props.get('id', '')}")
                 continue
 
-            if not headline.strip() and not description.strip():
+            if not headline and not description:
                 print(f"❌ Skipping empty alert: {props.get('id', '')}")
                 continue
 
@@ -79,7 +79,7 @@ def fetch_nws_api_alerts(db_path):
         print(f"✅ Inserted {inserted} new alert(s) from API")
         print(f"💬 Translations this cycle: {TRANSLATION_COUNT}")
         TRANSLATION_COUNT = 0  # reset counter after the cycle finishes     
-          
+
     except Exception as e:
         print(f"Error fetching NWS API alerts: {e}")
 

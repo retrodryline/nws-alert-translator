@@ -2,8 +2,11 @@ import os
 import requests
 import openai
 from openai import OpenAI
+from app.metrics import TRANSLATION_COUNT
+from dotenv import load_dotenv
+load_dotenv()  # 👈 This loads .env into os.environ
 
-TRANSLATION_COUNT = 0 
+TRANSLATOR = os.getenv("TRANSLATOR", "gpt")  # default to gpt if not set
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 openai_client = OpenAI(api_key=openai.api_key)
@@ -42,7 +45,6 @@ def translate_with_gpt(text, model="gpt-3.5-turbo"):
         print(f"[OpenAI Translation Error] {e}")
         return None
 
-from scheduler.poll_nws import TRANSLATION_COUNT  # import the global counter
 
 def translate_to_spanish(text, use="default"):
     global TRANSLATION_COUNT
