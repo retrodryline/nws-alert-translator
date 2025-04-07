@@ -57,3 +57,13 @@ def alert_is_unchanged(alert_id, headline, description):
 
     return (headline.strip() == existing_headline.strip() and
             description.strip() == existing_description.strip())
+
+
+def fetch_alerts(db_path, limit=10):
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM alerts ORDER BY effective DESC LIMIT ?", (limit,))
+    results = [dict(row) for row in cur.fetchall()]
+    conn.close()
+    return results
