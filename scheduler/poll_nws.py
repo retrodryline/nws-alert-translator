@@ -35,6 +35,19 @@ def fetch_nws_api_alerts(db_path):
             headline = props.get("headline", "")
             description = props.get("description", "")
 
+            # ✅ Skip if headline and description are basically empty or test alerts
+            if "test" in headline.lower() or "test" in description.lower():
+                print(f"🚫 Skipping test alert: {props.get('id', '')}")
+                continue
+
+            if "monitor only" in headline.lower() or "monitoreo" in description.lower():
+                print(f"⏸️ Skipping monitor-only alert: {props.get('id', '')}")
+                continue
+
+            if not headline.strip() and not description.strip():
+                print(f"❌ Skipping empty alert: {props.get('id', '')}")
+                continue
+
             if alert_is_unchanged(props["id"], headline, description, DB_PATH):
                 print(f"⏩ Unchanged alert: {props['id']}")
                 continue
