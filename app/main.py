@@ -6,8 +6,10 @@ import os
 import sqlite3
 import json
 from feedgen.feed import FeedGenerator
-
 from db.database import init_db, fetch_alerts, insert_alert
+import threading
+import time
+from scheduler.poll_nws import fetch_nws_api_alerts, fetch_nws_cap_alerts
 
 # 📦 Handle SQLite path
 if os.getenv("RENDER"):
@@ -72,3 +74,21 @@ def rss_feed():
         fe.pubDate(a["effective"] or a["expires"])
 
     return Response(content=fg.rss_str(pretty=True), media_type="application/rss+xml")
+
+def poll_nws_every(interval=30):  # every 30 sec
+    def loop():
+        while True:
+            print("🔁 Polling NWS alerts...")
+            try:
+                fetch_nws_api_alerts()
+                fetch_nws_cap_alerts()
+            except Exception as e:
+                print(f"❌ Polling error: {e}")
+            time.sleep(interval)
+    thread = threading.Thread(target=loop, daemon=True)
+    thread.start()
+
+@app.on_event("startup")
+def startup_event():
+    init_db(DB_PATH)
+    poll_nws_every(30)  # Start polling every 30 sec
