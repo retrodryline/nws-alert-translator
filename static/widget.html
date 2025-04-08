@@ -111,27 +111,42 @@
     }
 
     function renderAlerts(data) {
-      const container = document.getElementById("alerts");
-      container.innerHTML = "";
+    const container = document.getElementById("alerts");
+    container.innerHTML = "";
 
-      if (data.length === 0) {
-        container.innerHTML = "<p>No matching alerts found.</p>";
-        return;
-      }
-
-      data.forEach(a => {
-        const div = document.createElement("div");
-        const severityClass = (a.severity || "").toLowerCase();
-        div.className = `alert ${severityClass}`;
-        div.innerHTML = `
-          <div class="badge">${a.severity || "Unknown"}</div>
-          <div><strong>${a.translated_headline || "⚠️ Sin título"}</strong></div>
-          <div class="area">🌍 ${a.area || "Unknown Area"}</div>
-          <div style="margin-top: 0.5rem;">${a.translated_description || "Sin descripción."}</div>
-        `;
-        container.appendChild(div);
-      });
+    if (data.length === 0) {
+      container.innerHTML = "<p>No matching alerts found.</p>";
+      return;
     }
+
+    data.forEach(a => {
+      // 🧼 Skip monitor-only / test / irrelevant alerts
+      const isNoise =
+        !a.translated_headline ||
+        a.translated_headline.toLowerCase().includes("favor de ignorar") ||
+        a.translated_description.toLowerCase().includes("favor de ignorar") ||
+        a.translated_headline.toLowerCase().includes("mensaje de monitoreo") ||
+        a.translated_description.toLowerCase().includes("mensaje de monitoreo") ||
+        a.translated_headline.toLowerCase().includes("prueba") ||
+        a.translated_description.toLowerCase().includes("prueba");
+
+      if (isNoise) return;
+
+      const div = document.createElement("div");
+      const severityClass = (a.severity || "").toLowerCase();
+      div.className = `alert ${severityClass}`;
+      div.innerHTML = `
+        <div class="badge">${a.severity || "Unknown"}</div>
+        <div><strong>${a.translated_headline || "⚠️ Sin título"}</strong></div>
+        <div class="area">🌍 ${a.area || "Unknown Area"}</div>
+        <div style="margin-top: 0.5rem;">${a.translated_description || "Sin descripción."}</div>
+        <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">
+        ⏰ Effective: ${new Date(a.effective).toLocaleString()}
+        </div>
+      `;
+      container.appendChild(div);
+    });
+  }
   </script>
 </body>
 </html>
