@@ -17,7 +17,11 @@ LIBRE_URL = os.getenv("LIBRE_URL", "https://translate.argosopentech.com")
 def translate_all_fields(headline, description, instruction) -> dict:
     global TRANSLATION_COUNT
     if not (headline or description or instruction):
-        return {"translated_headline": "", "translated_description": "", "translated_instruction": ""}
+        return {
+            "translated_headline": "",
+            "translated_description": "",
+            "translated_instruction": ""
+        }
 
     TRANSLATION_COUNT += 1
 
@@ -58,6 +62,14 @@ Instruction: {instruction or ""}
                 "translated_description": "",
                 "translated_instruction": ""
             }
+
+    except Exception as e:
+        print(f"❌ GPT translation failed: {e}")
+        return {
+            "translated_headline": "",
+            "translated_description": "",
+            "translated_instruction": ""
+        }
 
 
 
