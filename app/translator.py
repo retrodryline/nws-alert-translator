@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 import openai
 import json
@@ -21,7 +22,7 @@ def translate_all_fields(headline, description, instruction) -> dict:
     TRANSLATION_COUNT += 1
 
     prompt = f"""
-Translate the following weather alert into Spanish. Return ONLY valid JSON like:
+Translate the following weather alert into Spanish. Return ONLY valid JSON. No explanations or extra comments.
 {{
   "translated_headline": "...",
   "translated_description": "...",
@@ -42,15 +43,21 @@ Instruction: {instruction or ""}
             temperature=0.3,
             max_tokens=600
         )
-        message = response.choices[0].message.content
-        return json.loads(message)
-    except Exception as e:
-        print(f"❌ GPT translation failed: {e}")
-        return {
-            "translated_headline": "",
-            "translated_description": "",
-            "translated_instruction": ""
-        }
+        message = response.choices[0].message.content.strip()
+
+        # ✅ Clean invalid control characters that may break json.loads
+        message_clean = re.sub(r"[\x00-\x1f\x7f]", "", message)
+
+        try:
+            return json.loads(message_clean)
+        except json.JSONDecodeError as e:
+            print(f"❌ JSON decode failed: {e}")
+            print(f"⚠️ Raw GPT output: {message}")
+            return {
+                "translated_headline": "",
+                "translated_description": "",
+                "translated_instruction": ""
+            }
 
 
 
